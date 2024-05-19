@@ -1,7 +1,13 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.PlayerLoop;
+using TMPro;
+using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 public class Puzzle : MonoBehaviour
 {
@@ -10,27 +16,108 @@ public class Puzzle : MonoBehaviour
 
     public NumberBox[,] boxes = new NumberBox[4, 4];
 
-    public Sprite[] sprites;
+    public Sprite[] letterSprites;
 
-    // Start is called before the first frame update
-    void Start()
+    int[] letterPos;
+
+    int currentLetterAscii;
+
+    int[] letterAscii;
+
+    string WinningWord;
+
+    public int currentLevel = 1;
+
+    int WordCounter = 0;
+
+    public Sprite[] gridSprites;
+
+    public Sprite[] gridCellSprites;
+
+    public string spriteNamePrefix = "Sprites/spritesheet_";
+
+    public float timeLeft = 60.0f;
+
+    public TMP_Text showTimer;
+    public TMP_Text showTempGameStatus;
+
+    void Start()    
     {
+
+        gridCellSprites = new Sprite[16];
+        letterAscii = new int[16];
+        letterPos = new int[4];
+
+        gridCellSprites = DefineWinningArr(letterSprites);
         Init();
         for (int i = 0; i < 999; i++)
             Shuffle();
     }
 
+    public Sprite[] DefineWinningArr(Sprite[] letterSprites)
+    {
+
+        Levels Level = new Levels();
+        WinningWord = Level.WinningLetters(currentLevel);
+        Debug.Log(WinningWord);
+
+        for (int i = 0; i < 4; i++) {   
+            currentLetterAscii = (int)WinningWord[i];
+            //ascii for small a is 97
+            letterAscii[i] = currentLetterAscii - 97;
+        }
+
+        for (var i = 0; i < 4; i++)
+            letterPos[i] = Random.Range(0,14);
+
+        for (int i=0; i<15; i++)
+        {
+            if (Array.Exists(letterPos, element => element == i))
+            {
+
+                gridCellSprites[i] = letterSprites[letterAscii[WordCounter]];
+                WordCounter++;
+            }
+            else
+            {
+                gridCellSprites[i] = letterSprites[26];
+            }
+        }
+        gridCellSprites[15] = letterSprites[27];
+
+        return gridCellSprites;
+    }
+
+
+    //To check winning status
+    void CheckWinCond()
+    {
+        for (var i = 0; i < 4; i++) { 
+            Debug.Log(letterSprites[letterAscii[i]]);
+        }
+
+
+        Debug.Log(boxes[0, 3]);
+        foreach(Sprite arr in gridCellSprites)
+        {
+            //Debug.Log(arr);
+        }
+    }
+
+
     void Init()
     {
-        //asdasd
+
         int n = 0;
         for (int y = 3; y >= 0; y--)
             for (int x = 0; x < 4; x++)
             {
-                NumberBox box = Instantiate(boxPrefab, new Vector2(x, y), Quaternion.identity);
-                box.Init(x, y, n + 1, sprites[n], ClickToSwap);
-                boxes[x, y] = box;
-                n++;
+                if (n<16) { 
+                    NumberBox box = Instantiate(boxPrefab, new Vector2(x, y), Quaternion.identity);
+                    box.Init(x, y, n + 1, gridCellSprites[n], ClickToSwap);
+                    boxes[x, y] = box;
+                    n++;
+                }
             }
     }
 
@@ -97,6 +184,7 @@ public class Puzzle : MonoBehaviour
 
     private Vector2 lastMove;
 
+
     Vector2 GetValidMove(int x, int y)
     {
         Vector2 pos = new Vector2();
@@ -125,5 +213,11 @@ public class Puzzle : MonoBehaviour
     bool IsRepeatMove(Vector2 pos)
     {
         return pos * -1 == lastMove;
+    }
+
+    void Update()
+    {
+        timeLeft -= Time.deltaTime;
+        showTimer.text = (timeLeft).ToString("0");
     }
 }
