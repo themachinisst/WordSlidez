@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class NumberBox : MonoBehaviour
 {
@@ -10,9 +11,16 @@ public class NumberBox : MonoBehaviour
     int x = 0;
     int y = 0;
 
-    private Action<int, int> swapFunc = null;
-    
-    public void Init(int i, int j, int index, Sprite sprite, Action<int, int> swapFunc)
+    private Action<int, int, string, bool> swapFunc = null;
+
+    private Puzzle puzzle;
+
+    public void Start()
+    {
+        puzzle = new Puzzle(); 
+    }
+
+    public void Init(int i, int j, int index, Sprite sprite, Action<int, int, string, bool> swapFunc)
     {
         this.index = index;
         this.GetComponent<SpriteRenderer>().sprite = sprite;
@@ -44,19 +52,20 @@ public class NumberBox : MonoBehaviour
         }
 
         this.gameObject.transform.localPosition = end;
+
     }
 
     public bool IsEmpty()
     {
         return index == 16;
-
     }
 
     void OnMouseDown()
     {
         if(Input.GetMouseButtonDown(0) && swapFunc != null) 
         {
-            swapFunc(x, y);
+            swapFunc(x, y, name, true);
+           // puzzle.CheckWinCond(x, y, name);
         }    
     }
 }

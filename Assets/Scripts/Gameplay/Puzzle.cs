@@ -8,6 +8,9 @@ using UnityEngine.PlayerLoop;
 using TMPro;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
+using UnityEngine.XR;
+using Unity.Burst.Intrinsics;
+using System.Linq;
 
 public class Puzzle : MonoBehaviour
 {
@@ -36,24 +39,34 @@ public class Puzzle : MonoBehaviour
 
     public string spriteNamePrefix = "Sprites/spritesheet_";
 
-    public float timeLeft = 60.0f;
+    public GameObject FirstLetter;
 
-    public TMP_Text showTimer;
-    public TMP_Text showTempGameStatus;
+    int[] WinnindWordArr;
 
-    void Start()    
+    public UIActions UIActions;
+
+    void Start()
     {
-
         gridCellSprites = new Sprite[16];
         letterAscii = new int[16];
         letterPos = new int[4];
-
+        WinnindWordArr = new int[4];
+        // Ensure UIActions is assigned, either via the Inspector or dynamically
+        if (UIActions == null)
+        {
+            UIActions = FindObjectOfType<UIActions>();
+            if (UIActions == null)
+            {
+                Debug.LogError("UIActions component not found in the scene!");
+            }
+        }
         gridCellSprites = DefineWinningArr(letterSprites);
         Init();
         for (int i = 0; i < 999; i++)
             Shuffle();
     }
 
+    //Define levels word and add it to the sprite arr 
     public Sprite[] DefineWinningArr(Sprite[] letterSprites)
     {
 
@@ -63,18 +76,14 @@ public class Puzzle : MonoBehaviour
 
         for (int i = 0; i < 4; i++) {   
             currentLetterAscii = (int)WinningWord[i];
-            //ascii for small a is 97
-            letterAscii[i] = currentLetterAscii - 97;
+            //ascii for small a is 65//97
+            letterAscii[i] = currentLetterAscii - 65;
         }
-
-        for (var i = 0; i < 4; i++)
-            letterPos[i] = Random.Range(0,14);
 
         for (int i=0; i<15; i++)
         {
-            if (Array.Exists(letterPos, element => element == i))
+            if (i<4)
             {
-
                 gridCellSprites[i] = letterSprites[letterAscii[WordCounter]];
                 WordCounter++;
             }
@@ -90,18 +99,64 @@ public class Puzzle : MonoBehaviour
 
 
     //To check winning status
-    void CheckWinCond()
+    public bool CheckWinCond(int x, int y, string name)
     {
-        for (var i = 0; i < 4; i++) { 
-            Debug.Log(letterSprites[letterAscii[i]]);
+        var WinnindWordArrSum = WinnindWordArr.Sum(itm => itm);
+        //Debug.Log(WinnindWordArrSum);
+        if (WinnindWordArrSum<4) { 
+            if (x == 0 && y == 3 && name == "Cell0")
+            {
+                UIActions.UpdateWinningWordLabel(0, WinningWord[0].ToString());
+                Debug.Log(WinningWord[0]);
+                WinnindWordArr[0] = 1;
+            }
+            if (x == 1 && y == 3 && name == "Cell1")
+            {   
+                UIActions.UpdateWinningWordLabel(1, WinningWord[1].ToString());
+                Debug.Log(WinningWord[1].ToString());
+                WinnindWordArr[1] = 1;
+            }
+            if (x == 2 && y == 3 && name == "Cell2")
+            {
+                UIActions.UpdateWinningWordLabel(2, WinningWord[2].ToString());
+                Debug.Log(WinningWord[2]);
+                WinnindWordArr[2] = 1;
+            }
+            if (x == 3 && y == 3 && name == "Cell3")
+            {
+                UIActions.UpdateWinningWordLabel(3, WinningWord[3].ToString());
+                Debug.Log(WinningWord[3]);
+                WinnindWordArr[3] = 1;
+            }
         }
-
-
-        Debug.Log(boxes[0, 3]);
-        foreach(Sprite arr in gridCellSprites)
+        else if(WinnindWordArrSum == 4)
         {
-            //Debug.Log(arr);
+            GameObject FirstLetter = GameObject.Find("Cell0");
+            GameObject SecondLetter = GameObject.Find("Cell1");
+            GameObject ThirdLetter = GameObject.Find("Cell2");
+            GameObject FourthLetter = GameObject.Find("Cell3");
+
+            /*
+            Debug.Log(FirstLetter.transform.position);
+            Debug.Log(SecondLetter.transform.position);
+            Debug.Log(ThirdLetter.transform.position);
+            Debug.Log(FourthLetter.transform.position);
+            */
+
+            if ((x == 0 && y == 3 && name == "Cell0")
+                || (x == 1 && y == 3 && name == "Cell1")
+                || (x == 2 && y == 3 && name == "Cell2")
+                || (x == 3 && y == 3 && name == "Cell3"))
+            {
+                Debug.Log("FINITO");
+                UIActions.ShowPopup(3);
+            }
+            else
+            {
+                //Debug.Log("NOFINITO");
+            }
         }
+        return true;
     }
 
 
@@ -114,33 +169,38 @@ public class Puzzle : MonoBehaviour
             {
                 if (n<16) { 
                     NumberBox box = Instantiate(boxPrefab, new Vector2(x, y), Quaternion.identity);
+                    box.name = "Cell"+ n;
                     box.Init(x, y, n + 1, gridCellSprites[n], ClickToSwap);
                     boxes[x, y] = box;
                     n++;
+
                 }
             }
     }
 
-    void ClickToSwap(int x, int y)
+    void ClickToSwap(int x, int y, string objName, bool swapFlag)
     {
         int dx = getDx(x, y);
         int dy = getDy(x, y);
-        Swap(x, y, dx, dy);
+        Swap(x, y, dx, dy, objName, swapFlag);
 
     }
 
-    void Swap(int x, int y, int dx, int dy)
+    void Swap(int x, int y, int dx, int dy, string objName, bool swapFlag)
     {
-        var from = boxes[x, y];
-        var target = boxes[x+dx, y+dy];
+            var from = boxes[x, y];
+            var target = boxes[x + dx, y + dy];
 
-        //swap this 2 boxes
-        boxes[x, y] = target;
-        boxes[x+dx, y+dy] = from;
+            //swap this 2 boxes
+            boxes[x, y] = target;
+            boxes[x + dx, y + dy] = from;
 
-        //update pos 2 boxes
-        from.UpdatePos(x + dx, y + dy);
-        target.UpdatePos(x, y);
+            //update pos 2 boxes
+            from.UpdatePos(x + dx, y + dy);
+            target.UpdatePos(x, y);
+            if(swapFlag)
+                CheckWinCond(x + dx, y + dy, objName);
+            
     }
 
     int getDx(int x, int y)
@@ -177,7 +237,7 @@ public class Puzzle : MonoBehaviour
                 if (boxes[i, j].IsEmpty())
                 {
                     Vector2 pos = GetValidMove(i, j);
-                    Swap(i, j, (int)pos.x, (int)pos.y);
+                    Swap(i, j, (int)pos.x, (int)pos.y, "", (bool)false);
                 }
             }
     }
@@ -215,9 +275,4 @@ public class Puzzle : MonoBehaviour
         return pos * -1 == lastMove;
     }
 
-    void Update()
-    {
-        timeLeft -= Time.deltaTime;
-        showTimer.text = (timeLeft).ToString("0");
-    }
 }

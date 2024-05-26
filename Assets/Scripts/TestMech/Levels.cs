@@ -5,17 +5,17 @@ using UnityEngine;
 public class Levels : MonoBehaviour
 {
     private string[] WinningWords = new string[5];
-
     public string WinningLetters(int LevelIndex)
     {
         //Level 1 Words
+        //scritptable objects with lists
         if (LevelIndex == 1)
         {
-            WinningWords[0] = "time";
-            WinningWords[1] = "last";
-            WinningWords[2] = "stop";
-            WinningWords[3] = "drop";
-            WinningWords[4] = "over";
+            WinningWords[0] = "GRIN";
+            WinningWords[1] = "POST";
+            WinningWords[2] = "CHIN";
+            WinningWords[3] = "TRAP";
+            WinningWords[4] = "REEF";
         }
 
         //Level 2 Words
@@ -42,3 +42,11 @@ public class Levels : MonoBehaviour
         return WinningWords[Random.Range(0, 4)];
     }
 }
+//add bg first
+//count movecounta 
+//add powerups in earlier stages
+//check match3 games for powerups
+
+//use json file for 'words' list
+//restructure the code, make it intuitive, and avoid static values and loops
+//make a doc for class~objects mindmap
