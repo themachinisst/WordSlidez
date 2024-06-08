@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.U2D;
 
 public class UIActions : MonoBehaviour
 {
@@ -10,9 +11,17 @@ public class UIActions : MonoBehaviour
     public TMP_Text ThirdWinningWordLetter;
     public TMP_Text FourthWinningWordLetter;
     string WinningWordsChar;
-    //public GameObject LvlCompletePopup = new GameObject();
+    public GameObject LvlCompletePopup;
     public TMP_Text LvlCompletePopupText;
 
+    public GameObject GridParent;
+
+    public SpriteRenderer StarOne;
+    public SpriteRenderer StarTwo;
+    public SpriteRenderer StarThree;
+
+    public Sprite emptyStar;
+    public Sprite completeStar;
 
     // Start is called before the first frame update
     void Awake()
@@ -26,7 +35,6 @@ public class UIActions : MonoBehaviour
             Debug.LogError("ThirdWinningWordLetter is not assigned in the Inspector!");
         if (FourthWinningWordLetter == null)
             Debug.LogError("FourthWinningWordLetter is not assigned in the Inspector!");
-        //GameObject LvlCompletePopup = new GameObject();
     }
 
     public void UpdateWinningWordLabel(int pos, string WinningWordsChar)
@@ -51,14 +59,37 @@ public class UIActions : MonoBehaviour
     }
 
 
-    public void ShowPopup(int lvlStars) 
+    public void ShowPopup(int lvlStars)
     {
-        //LvlCompletePopup.SetActive(true);
-        //LvlCompletePopupText.text = "You got "+lvlStars.ToString()+" stars";
+        GridParent.SetActive(false);
+        LvlCompletePopup.SetActive(true);
+        LvlCompletePopupText.text = "Level Complete";
+        if (lvlStars == 4)
+        {
+            StarOne.sprite = completeStar;
+            StarTwo.sprite = completeStar;
+            StarThree.sprite = completeStar;
+        }else if (lvlStars == 3)
+        {
+
+            StarOne.sprite = completeStar;
+            StarTwo.sprite = completeStar;
+            StarThree.sprite = emptyStar;
+        }
+        else if (lvlStars == 2)
+        {
+
+            StarOne.sprite = completeStar;
+            StarTwo.sprite = completeStar;
+            StarThree.sprite = emptyStar;
+        }
+        else if (lvlStars == 1)
+        {
+
+            StarOne.sprite = completeStar;
+            StarTwo.sprite = emptyStar;
+            StarThree.sprite = emptyStar;
+        }
     }
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    
 }

@@ -39,14 +39,28 @@ public class Puzzle : MonoBehaviour
 
     public string spriteNamePrefix = "Sprites/spritesheet_";
 
-    public GameObject FirstLetter;
-
-    int[] WinnindWordArr;
+    public int[] WinnindWordArr;
 
     public UIActions UIActions;
 
+    public Transform gridParentTransform;
+    private int correctLetterCount;
+
+    public string sortingLayerName = "Grid"; // Name of the sorting layer for the grid
+    public int sortingOrder = 10; // Sorting order for the grid elements
+
+    public int currentProg = 0;
     void Start()
-    {
+    {  
+
+        // Ensure the parent transform has a sorting layer and order if applicable
+        SpriteRenderer parentSpriteRenderer = gridParentTransform.GetComponent<SpriteRenderer>();
+        if (parentSpriteRenderer != null)
+        {
+            parentSpriteRenderer.sortingLayerName = sortingLayerName;
+            parentSpriteRenderer.sortingOrder = sortingOrder;
+        }
+
         gridCellSprites = new Sprite[16];
         letterAscii = new int[16];
         letterPos = new int[4];
@@ -99,64 +113,43 @@ public class Puzzle : MonoBehaviour
 
 
     //To check winning status
-    public bool CheckWinCond(int x, int y, string name)
+    public int CheckWinCond(int x, int y, string name)
     {
         var WinnindWordArrSum = WinnindWordArr.Sum(itm => itm);
-        //Debug.Log(WinnindWordArrSum);
-        if (WinnindWordArrSum<4) { 
+        var correctLetterCount = 0;
+
+        if (WinnindWordArrSum<5) { 
             if (x == 0 && y == 3 && name == "Cell0")
             {
                 UIActions.UpdateWinningWordLabel(0, WinningWord[0].ToString());
-                Debug.Log(WinningWord[0]);
+                //Debug.Log(WinningWord[0]);
                 WinnindWordArr[0] = 1;
+                correctLetterCount += 1;
             }
             if (x == 1 && y == 3 && name == "Cell1")
             {   
                 UIActions.UpdateWinningWordLabel(1, WinningWord[1].ToString());
-                Debug.Log(WinningWord[1].ToString());
+                ///Debug.Log(WinningWord[1].ToString());
                 WinnindWordArr[1] = 1;
+                correctLetterCount += 1;
             }
             if (x == 2 && y == 3 && name == "Cell2")
             {
                 UIActions.UpdateWinningWordLabel(2, WinningWord[2].ToString());
-                Debug.Log(WinningWord[2]);
+                //Debug.Log(WinningWord[2]);
                 WinnindWordArr[2] = 1;
+                correctLetterCount += 1;
             }
             if (x == 3 && y == 3 && name == "Cell3")
             {
                 UIActions.UpdateWinningWordLabel(3, WinningWord[3].ToString());
-                Debug.Log(WinningWord[3]);
+               //Debug.Log(WinningWord[3]);
                 WinnindWordArr[3] = 1;
+                correctLetterCount += 1;
             }
         }
-        else if(WinnindWordArrSum == 4)
-        {
-            GameObject FirstLetter = GameObject.Find("Cell0");
-            GameObject SecondLetter = GameObject.Find("Cell1");
-            GameObject ThirdLetter = GameObject.Find("Cell2");
-            GameObject FourthLetter = GameObject.Find("Cell3");
 
-            /*
-            Debug.Log(FirstLetter.transform.position);
-            Debug.Log(SecondLetter.transform.position);
-            Debug.Log(ThirdLetter.transform.position);
-            Debug.Log(FourthLetter.transform.position);
-            */
-
-            if ((x == 0 && y == 3 && name == "Cell0")
-                || (x == 1 && y == 3 && name == "Cell1")
-                || (x == 2 && y == 3 && name == "Cell2")
-                || (x == 3 && y == 3 && name == "Cell3"))
-            {
-                Debug.Log("FINITO");
-                UIActions.ShowPopup(3);
-            }
-            else
-            {
-                //Debug.Log("NOFINITO");
-            }
-        }
-        return true;
+        return correctLetterCount ;
     }
 
 
@@ -169,6 +162,14 @@ public class Puzzle : MonoBehaviour
             {
                 if (n<16) { 
                     NumberBox box = Instantiate(boxPrefab, new Vector2(x, y), Quaternion.identity);
+                    box.transform.SetParent(gridParentTransform, false);
+                    // Set the sorting layer and order for each box
+                    SpriteRenderer boxSpriteRenderer = box.GetComponent<SpriteRenderer>();
+                    if (boxSpriteRenderer != null)
+                    {
+                        boxSpriteRenderer.sortingLayerName = sortingLayerName;
+                        boxSpriteRenderer.sortingOrder = sortingOrder;
+                    }
                     box.name = "Cell"+ n;
                     box.Init(x, y, n + 1, gridCellSprites[n], ClickToSwap);
                     boxes[x, y] = box;
@@ -196,10 +197,12 @@ public class Puzzle : MonoBehaviour
             boxes[x + dx, y + dy] = from;
 
             //update pos 2 boxes
-            from.UpdatePos(x + dx, y + dy);
-            target.UpdatePos(x, y);
-            if(swapFlag)
-                CheckWinCond(x + dx, y + dy, objName);
+            from.UpdatePos(x + dx, y + dy, swapFlag);
+            target.UpdatePos(x, y, swapFlag);
+            if (swapFlag)
+            {
+                currentProg = CheckWinCond(x + dx, y + dy, objName);
+            }
             
     }
 

@@ -21,7 +21,7 @@ public class Levels : MonoBehaviour
         //Level 2 Words
         if (LevelIndex == 2)
         {
-            WinningWords[0] = "true";
+            WinningWords[0] = "TRUE";
             WinningWords[1] = "cart";
             WinningWords[2] = "post";
             WinningWords[3] = "cool";
